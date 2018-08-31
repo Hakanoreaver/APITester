@@ -16,4 +16,9 @@ public class MainController {
     public @ResponseBody String sendTest () {
         return "System Running";
     }
+
+    @GetMapping(path="/equivalence")
+    public @ResponseBody boolean checkEquivalence(@RequestParam JSONObject primaryyTest, @RequestParam JSONObject secondaryTest) {
+
+    }
 }
