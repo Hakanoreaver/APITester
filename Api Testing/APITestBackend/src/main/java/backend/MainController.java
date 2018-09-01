@@ -19,6 +19,9 @@ public class MainController {
 
     @GetMapping(path="/equivalence")
     public @ResponseBody boolean checkEquivalence(@RequestParam JSONObject primaryyTest, @RequestParam JSONObject secondaryTest) {
-
+        if(primaryyTest.toString().equals(secondaryTest.toString())){
+            return true;
+        }
+        else return false;
     }
 }
