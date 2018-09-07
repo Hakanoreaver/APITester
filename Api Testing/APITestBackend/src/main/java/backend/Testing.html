@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<script type="text/javascript">
+	function sendTest() {
+		alert("test sent");
+		var urlString = document.getElementById("url").value;
+		var arg1 = document.getElementById("firstArg").value;
+		var arg2 = document.getElementById("secondArg").value;
+		var val1 = document.getElementById("firstValue").value;
+		var val2 = document.getElementById("secondValue").value;
+		alert(arg1);
+		var ajax = new XMLHttpRequest();
+		ajax.open('GET', 'http://localhost:8090/backend/equivalence?'+'urlBase=' + urlString + '&urlArgs=' +arg1 + ',' + arg2 + '&argValues=' + val1 + ',' + val2 , false);
+		ajax.send();
+		alert(ajax.responseText);
+	}
+</script>
+<html>
+<head>
+	<title>API Tester Testing</title>
+</head>
+<body>
+	<h1>API Testing</h1>
+	<input type="text" id="url" placeholder="url base">
+	<input type="text" id="firstArg" placeholder="arg 1">
+	<input type="text" id="secondArg" placeholder="arg 2">
+	<input type="text" id="firstValue" placeholder="val 1">
+	<input type="text" id="secondValue" placeholder="val 2">
+	<button onclick="sendTest()">Send Test</button>
+</body>
+</html>
