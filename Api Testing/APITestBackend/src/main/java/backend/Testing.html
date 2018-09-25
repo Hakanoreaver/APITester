@@ -13,18 +13,35 @@
 		ajax.send();
 		alert(ajax.responseText);
 	}
+
+	function sendTest1() {
+		alert("test sent");
+		var arg1 = document.getElementById("url1").value;
+		var arg2 = document.getElementById("url2").value;
+		var path = document.getElementById("path").value;
+		var ajax = new XMLHttpRequest();
+		ajax.open('GET', 'http://localhost:8090/backend/equivalence?'+'urlOne=' + arg1 + '&urlTwo=' +arg2 +'&checkPath=' + path, false);
+		ajax.send();
+		alert(ajax.responseText); 
+	}
 </script>
 <html>
 <head>
 	<title>API Tester Testing</title>
 </head>
 <body>
-	<h1>API Testing</h1>
+	<h1>Equality</h1>
 	<input type="text" id="url" placeholder="url base">
 	<input type="text" id="firstArg" placeholder="arg 1">
 	<input type="text" id="secondArg" placeholder="arg 2">
 	<input type="text" id="firstValue" placeholder="val 1">
 	<input type="text" id="secondValue" placeholder="val 2">
 	<button onclick="sendTest()">Send Test</button>
+
+	<h1>Equivalence</h1>
+	<input type="text" id="url1" placeholder="ulr 1">
+	<input type="text" id="url2" placeholder="url 2">
+	<input type="text" id="path" placeholder="path">
+	<button onclick="sendTest1()">Send Test</button>
 </body>
 </html>

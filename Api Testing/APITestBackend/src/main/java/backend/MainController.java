@@ -1,5 +1,6 @@
 package backend;
 
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import org.json.JSONString;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -12,6 +13,8 @@ import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Controller    // This means that this class is a Controller
@@ -23,8 +26,8 @@ public class MainController {
         return test.getForObject("http://localhost:8080/demo/event/byDate?month=4&year=1990", String.class);
     }
 
-    @GetMapping(path="/equivalence")
-    public @ResponseBody String checkEquivalence(@RequestParam String urlBase, @RequestParam String[] urlArgs, @RequestParam String[] argValues) throws URISyntaxException {
+    @GetMapping(path="/equality")
+    public @ResponseBody String checkEquality(@RequestParam String urlBase, @RequestParam String[] urlArgs, @RequestParam String[] argValues) throws URISyntaxException {
         if (urlArgs.length != argValues.length) return "Argument and value amounts do no match";
         String url = buildURL(urlBase, urlArgs, argValues); // Build our first url for primary call.
         RestTemplate restTemplate = new RestTemplate(); //Rest template allows us to call RESTful API
@@ -64,9 +67,55 @@ public class MainController {
             if(!primaryTest.equals(secondaryTests[i])) testsHeldTrue = false;
         }
         if(testsHeldTrue){
-            return "Equivalence test holds true";
+            return "Equalitytest holds true";
         }
-        else return "Equivalence test does not hold true";
+        else return "Equality test does not hold true";
+    }
+
+    @GetMapping(path="/equivalence")
+    public @ResponseBody String checkEquivalence(@RequestParam String urlOne, @RequestParam String urlTwo,@RequestParam String[] checkPath) {
+        RestTemplate restTemplate = new RestTemplate();
+        Object primaryTest, secondaryTest;
+        try {
+            primaryTest = restTemplate.getForObject(urlOne, Object.class);//Get api call return as a json object
+            secondaryTest = restTemplate.getForObject(urlTwo, Object.class);
+        } catch (IllegalArgumentException e) {
+            return "IllegalArgumentException";
+        } catch (HttpClientErrorException e) {
+            return "HttpClientErrorException";
+        } catch (ClassCastException e) {
+            return "response is not in json format";
+        }
+        if (primaryTest.getClass() == JSONObject.class && secondaryTest.getClass() == JSONObject.class) {
+            JSONObject object = (JSONObject) primaryTest;
+            JSONObject object2 = (JSONObject) secondaryTest;
+            for (int i = 0; i < checkPath.length - 1; i++) {
+                object = object.getJSONObject(checkPath[i]);
+                object2 = object2.getJSONObject(checkPath[i]);
+            }
+            if(testEquality(object.getJSONArray(checkPath[checkPath.length-1]), object2.getJSONArray(checkPath[checkPath.length-1]))) {
+                return "Equivalence does hold true";
+            }
+            else return "Equivalence does not hold true";
+    }
+        else if (primaryTest.getClass() == JSONArray.class && secondaryTest.getClass() == JSONArray.class) {
+            JSONArray array = (JSONArray) primaryTest;
+            JSONArray array2 = (JSONArray) secondaryTest;
+            if(testEquality(array, array2)) {
+                return "Equivalence does hold true";
+            }
+            else return "Equivalence does not hold true";
+        }
+        else if (primaryTest.getClass() == ArrayList.class && secondaryTest.getClass() == ArrayList.class) {
+            List list = java.util.Arrays.asList(primaryTest);
+            List list2 = java.util.Arrays.asList(secondaryTest);
+            if(testEquality(list, list2)) {
+                return "Equivalence does hold true";
+            }
+            else return "Equivalence does not hold true";
+        }
+        else if (primaryTest.getClass() != secondaryTest.getClass()) return "responses not in same format";
+        else return "response format not recognised";
     }
 
     public String buildURL(String urlBase, String[] args, String[] values) { //Simple function for building a url
@@ -77,5 +126,101 @@ public class MainController {
         urlBase += urlBackend;
         return urlBase;
     }
+
+    @GetMapping(path="/subset")
+    public @ResponseBody String checkSubset(@RequestParam String urlBase, @RequestParam String var, @RequestParam String[] values, @RequestParam String[] checkPath) {
+        RestTemplate restTemplate = new RestTemplate();
+        Object primaryTest;
+        ArrayList<Object> secondaryTests = new ArrayList<>();
+        try {
+            primaryTest = restTemplate.getForObject(urlBase, Object.class);//Get api call return as a json object
+            for (int i = 1; i < values.length; i++) {
+                urlBase.replace(values[i-1], values[i]);
+                secondaryTests.add(restTemplate.getForObject(urlBase, Object.class));
+            }
+            if(primaryTest.getClass() == JSONArray.class) {
+                boolean isTrue = true;
+                for(int i = 0; i < secondaryTests.size(); i++) {
+                    JSONArray array = (JSONArray) primaryTest;
+                    JSONArray array2 = (JSONArray) secondaryTests.get(i);
+                    if(!testEquality(array, array2)) {
+                        return "Subset test does not hold true";
+                    }
+                }
+                return "subset test does hold true";
+            }
+            else if(primaryTest.getClass() == ArrayList.class) {
+                boolean isTrue = true;
+                for(int i = 0; i < secondaryTests.size(); i++) {
+                    List list = java.util.Arrays.asList(primaryTest);
+                    List list2 = java.util.Arrays.asList(secondaryTests.get(i));;
+                    if(!testEquality(list, list2)) {
+                        return "Subset test does not hold true";
+                    }
+                }
+                return "subset test does hold true";
+            }
+        } catch (IllegalArgumentException e) {
+            return "IllegalArgumentException";
+        } catch (HttpClientErrorException e) {
+            return "HttpClientErrorException";
+        } catch (ClassCastException e) {
+            return "response is not in json format";
+        }
+        return "";
+    }
+
+    public boolean testEquality(JSONArray testArray, JSONArray matchArray) {
+        if (testArray.length() != matchArray.length()) return false;
+        ArrayList<String> match = new ArrayList<>();
+        ArrayList<String> test = new ArrayList<>();
+        for (int i = 0; i < testArray.length(); i++) {
+            match.add(matchArray.get(i).toString());
+            test.add(testArray.get(i).toString());
+        }
+        while(test.size() > 0) {
+            boolean matched = false;
+            for (int i = 0; i < match.size(); i++) {
+                if (test.get(0).equals(match.get(i)) && !matched) {
+                    test.remove(0);
+                    match.remove(i);
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) return false;
+        }
+        return true;
+    }
+
+    public boolean testEquality(List testArray, List matchArray) {
+        if (testArray.size() != matchArray.size()) return false;
+        ArrayList<String> match = new ArrayList<>();
+        ArrayList<String> test = new ArrayList<>();
+        for (int i = 0; i < testArray.size(); i++) {
+            match.add(matchArray.get(i).toString());
+            test.add(testArray.get(i).toString());
+        }
+        while(test.size() > 0) {
+            boolean matched = false;
+            for (int i = 0; i < match.size(); i++) {
+                if (test.get(0).equals(match.get(i)) && !matched) {
+                    test.remove(0);
+                    match.remove(i);
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) return false;
+        }
+        return true;
+    }
+
+    public boolean testSubset() {
+
+        return true;
+    }
+
+
 
 }
