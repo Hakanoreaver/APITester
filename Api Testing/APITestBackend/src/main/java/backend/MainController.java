@@ -128,18 +128,31 @@ public class MainController {
     }
 
     @GetMapping(path="/subset")
-    public @ResponseBody String checkSubset(@RequestParam String urlBase, @RequestParam String var, @RequestParam String[] values, @RequestParam String[] checkPath) {
+    public @ResponseBody String checkSubset(@RequestParam String urlBase, @RequestParam String[] values, @RequestParam String[] checkPath) {
         RestTemplate restTemplate = new RestTemplate();
         Object primaryTest;
         ArrayList<Object> secondaryTests = new ArrayList<>();
         try {
-            primaryTest = restTemplate.getForObject(urlBase, Object.class);//Get api call return as a json object
+            primaryTest = restTemplate.getForObject(urlBase, Object.class);//Get api call return as an object
             for (int i = 1; i < values.length; i++) {
                 urlBase.replace(values[i-1], values[i]);
                 secondaryTests.add(restTemplate.getForObject(urlBase, Object.class));
             }
+            if(primaryTest.getClass() == JSONObject.class) {
+                for(int i = 0; i < secondaryTests.size(); i++) {
+                    JSONObject object = (JSONObject) primaryTest;
+                    JSONObject object2 = (JSONObject) secondaryTests.get(i);
+                    for (int x = 0; x < checkPath.length - 1; x++) {
+                        object = object.getJSONObject(checkPath[x]);
+                        object2 = object2.getJSONObject(checkPath[x]);
+                    }
+                    if(!testEquality(object.getJSONArray(checkPath[checkPath.length-1]), object2.getJSONArray(checkPath[checkPath.length-1]))) {
+                        return "Subset test does not hold true";
+                    }
+                }
+                return "subset test does hold true";
+            }
             if(primaryTest.getClass() == JSONArray.class) {
-                boolean isTrue = true;
                 for(int i = 0; i < secondaryTests.size(); i++) {
                     JSONArray array = (JSONArray) primaryTest;
                     JSONArray array2 = (JSONArray) secondaryTests.get(i);
@@ -150,7 +163,6 @@ public class MainController {
                 return "subset test does hold true";
             }
             else if(primaryTest.getClass() == ArrayList.class) {
-                boolean isTrue = true;
                 for(int i = 0; i < secondaryTests.size(); i++) {
                     List list = java.util.Arrays.asList(primaryTest);
                     List list2 = java.util.Arrays.asList(secondaryTests.get(i));;
@@ -216,10 +228,59 @@ public class MainController {
         return true;
     }
 
-    public boolean testSubset() {
+    @GetMapping(path="/disjoint")
+    public @ResponseBody String checkDisjoint(@RequestParam String urlOne, @RequestParam String urlTwo, @RequestParam String[] checkPath) {
+        RestTemplate restTemplate = new RestTemplate();
 
-        return true;
+        Object firstResponse = restTemplate.getForObject(urlOne, Object.class);
+        Object secondResponse = restTemplate.getForObject(urlTwo, Object.class);
+
+        if(firstResponse.getClass() == JSONObject.class) {
+            JSONObject object = (JSONObject) firstResponse;
+            JSONObject object2 = (JSONObject) secondResponse;
+            for (int x = 0; x < checkPath.length - 1; x++) {
+                object = object.getJSONObject(checkPath[x]);
+                object2 = object2.getJSONObject(checkPath[x]);
+            }
+            if(testEquality(object.getJSONArray(checkPath[checkPath.length-1]), object2.getJSONArray(checkPath[checkPath.length-1]))) {
+                return "Disjoint does not hold true";
+            }
+            else return "Disjoint does hold true";
+        }
+        else if(firstResponse.getClass() == JSONArray.class) {
+            JSONArray object = (JSONArray) firstResponse;
+            JSONArray object2 = (JSONArray) secondResponse;
+            if(!testEquality(object, object2)) {
+                return "Disjoint does not hold true";
+            }
+            else return "Disjoint does hold true";
+        }
+        else if(firstResponse.getClass() == ArrayList.class) {
+            List list = java.util.Arrays.asList(firstResponse);
+            List list2 = java.util.Arrays.asList(secondResponse);;
+            if(!testEquality(list, list2)) {
+                return "Disjoint does not hold true";
+            }
+            else return "Disjoint does hold true";
+        }
+        else return "Unknown Format type " + firstResponse.getClass();
     }
+
+    @GetMapping(path="/complete")
+    public @ResponseBody String checkComplete(@RequestParam String urlBase, @RequestParam String[] values, @RequestParam String[] checkPath) {
+        RestTemplate restTemplate = new RestTemplate();
+
+        Object firstResponse = restTemplate.getForObject(urlBase, Object.class);
+        ArrayList<Object> secondaryResponses = new ArrayList<>();
+        for (int i = 1; i < values.length; i++) {
+            urlBase.replace(values[i-1], values[i]);
+            secondaryResponses.add(restTemplate.getForObject(urlBase, Object.class));
+        }
+        
+        return "";
+    }
+
+
 
 
 
