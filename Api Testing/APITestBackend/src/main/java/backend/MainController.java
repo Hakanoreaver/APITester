@@ -49,7 +49,6 @@ public class MainController {
                 urlArgs[0] = urlArgs[x];
                 argValues[x] = temp2;
                 urlArgs[x] = temp1;
-                System.out.println("hello");
             }
                 try {
                     url = buildURL(urlBase, urlArgs, argValues);//Build a new url for the re ordered arguments
@@ -228,42 +227,55 @@ public class MainController {
         return true;
     }
 
+    /** The disjoint test expects the two result sets to be completely different from one another.
+     *
+     * @param urlOne
+     * @param urlTwo
+     * @param checkPath
+     * @return
+     */
+
+    // test/disjoint?urlOne=someURL&urlTwo=someURL&checkPath=one,two,three
     @GetMapping(path="/disjoint")
     public @ResponseBody String checkDisjoint(@RequestParam String urlOne, @RequestParam String urlTwo, @RequestParam String[] checkPath) {
-        RestTemplate restTemplate = new RestTemplate();
+        RestTemplate restTemplate = new RestTemplate(); //Creates the rest template for API calls to RESTful apis.
 
-        Object firstResponse = restTemplate.getForObject(urlOne, Object.class);
+        Object firstResponse = restTemplate.getForObject(urlOne, Object.class); //We get the response of the first call and second as an Object.
         Object secondResponse = restTemplate.getForObject(urlTwo, Object.class);
 
+        //We check the type of Object the response was as we must act differently for different responses
+        // If the response is a JSON object we must first find the JSONArray contaning the data to be tested if there is a check path.
         if(firstResponse.getClass() == JSONObject.class) {
-            JSONObject object = (JSONObject) firstResponse;
+            JSONObject object = (JSONObject) firstResponse; //Cast the first and second responses from Object to JSONObject type.
             JSONObject object2 = (JSONObject) secondResponse;
-            for (int x = 0; x < checkPath.length - 1; x++) {
+            for (int x = 0; x < checkPath.length - 1; x++) { //If there is a check path then we navigate through the object to the destination we want to test.
                 object = object.getJSONObject(checkPath[x]);
                 object2 = object2.getJSONObject(checkPath[x]);
             }
             if(testEquality(object.getJSONArray(checkPath[checkPath.length-1]), object2.getJSONArray(checkPath[checkPath.length-1]))) {
-                return "Disjoint does not hold true";
+                return "Disjoint does not hold true"; //If the test for equality returns true then the two objects are not in disjoint.
             }
-            else return "Disjoint does hold true";
+            else return "Disjoint does hold true"; //If true is not returned then the two objects must be in disjoint.
         }
+        //If the objects type is of JSONArray then we can test each part of the array without using a check path.
         else if(firstResponse.getClass() == JSONArray.class) {
-            JSONArray object = (JSONArray) firstResponse;
+            JSONArray object = (JSONArray) firstResponse; //Cast the first and second response from Object to JSONArray
             JSONArray object2 = (JSONArray) secondResponse;
-            if(!testEquality(object, object2)) {
-                return "Disjoint does not hold true";
+            if(!testEquality(object, object2)) { //If the test for equality returns true then the two objects are not in disjoint.
+                return "Disjoint does not hold true"; //If true is not returned then the two objects must be in disjoint.
             }
             else return "Disjoint does hold true";
         }
+        //If the objects type is of ArrayList then we can do a similiar test to JSONArray with slightly different syntax.
         else if(firstResponse.getClass() == ArrayList.class) {
-            List list = java.util.Arrays.asList(firstResponse);
+            List list = java.util.Arrays.asList(firstResponse); //Convert first and second responses from Object to ArrayList.
             List list2 = java.util.Arrays.asList(secondResponse);;
             if(!testEquality(list, list2)) {
-                return "Disjoint does not hold true";
+                return "Disjoint does not hold true"; //If the test for equality returns true then the two objects are not in disjoint.
             }
-            else return "Disjoint does hold true";
+            else return "Disjoint does hold true"; //If true is not returned then the two objects must be in disjoint.
         }
-        else return "Unknown Format type " + firstResponse.getClass();
+        else return "Unknown Format type " + firstResponse.getClass(); //This will return the objects type and an error message if the response format is not known.
     }
 
     @GetMapping(path="/complete")
