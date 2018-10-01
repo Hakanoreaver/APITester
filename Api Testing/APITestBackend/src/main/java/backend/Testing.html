@@ -9,7 +9,7 @@
 		var val2 = document.getElementById("secondValue").value;
 		alert(arg1);
 		var ajax = new XMLHttpRequest();
-		ajax.open('GET', 'http://localhost:8090/backend/equivalence?'+'urlBase=' + urlString + '&urlArgs=' +arg1 + ',' + arg2 + '&argValues=' + val1 + ',' + val2 , false);
+		ajax.open('GET', 'http://localhost:8090/backend/equality?'+'urlBase=' + urlString + '&urlArgs=' +arg1 + ',' + arg2 + '&argValues=' + val1 + ',' + val2 , false);
 		ajax.send();
 		alert(ajax.responseText);
 	}
