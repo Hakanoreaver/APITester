@@ -276,12 +276,17 @@ public class MainController {
             urlBase.replace(values[i-1], values[i]);
             secondaryResponses.add(restTemplate.getForObject(urlBase, Object.class));
         }
-        
+
         return "";
     }
 
+    public boolean testComplete(ArrayList<JSONArray> secondaryResponses, JSONArray firstResponse) {
 
+        return true;
+    }
 
+    public boolean testComplete(ArrayList<List> secondaryResponses, List firstResponse) {
 
-
+        return true;
+    }
 }
