@@ -20,15 +20,22 @@ import java.util.List;
 @Controller    // This means that this class is a Controller
 @RequestMapping(path="/backend") // This means URL's start with /backend (after Application path)
 public class MainController {
+    //Test so that we can see if the server is running.
     @GetMapping(path="/test")
-    public @ResponseBody String sendTest () {
-        RestTemplate test = new RestTemplate();
-        return test.getForObject("http://localhost:8080/demo/event/byDate?month=4&year=1990", String.class);
+    public @ResponseBody boolean sendTest () {
+        return true;
     }
 
+    /** This is the equality test
+     * @param urlBase
+     * @param urlArgs
+     * @param argValues
+     * @return
+     * @throws URISyntaxException
+     */
     @GetMapping(path="/equality")
     public @ResponseBody String checkEquality(@RequestParam String urlBase, @RequestParam String[] urlArgs, @RequestParam String[] argValues) throws URISyntaxException {
-        if (urlArgs.length != argValues.length) return "Argument and value amounts do no match";
+        if (urlArgs.length != argValues.length) return "Argument and value amounts do no match"; //Test to see if we have the same amount of values as arguments.
         String url = buildURL(urlBase, urlArgs, argValues); // Build our first url for primary call.
         RestTemplate restTemplate = new RestTemplate(); //Rest template allows us to call RESTful API
         String primaryTest;
@@ -40,7 +47,7 @@ public class MainController {
         catch (HttpClientErrorException e) {
             return "HttpClientErrorException at primary for url " + url;
         }
-        String[] secondaryTests = new String[urlArgs.length - 1];
+        String[] secondaryTests = new String[urlArgs.length - 1]; //An array of strings to store our args and values.
         for (int i = 1; i < urlArgs.length; i++) {
             for(int x = 1; x < urlArgs.length; x++) {
                 String temp1 = urlArgs[0]; //For each variation of the arguments move the array up by an index of 1
@@ -71,12 +78,18 @@ public class MainController {
         else return "Equality test does not hold true";
     }
 
+    /** This is the equivalence test
+     * @param urlOne
+     * @param urlTwo
+     * @param checkPath
+     * @return
+     */
     @GetMapping(path="/equivalence")
     public @ResponseBody String checkEquivalence(@RequestParam String urlOne, @RequestParam String urlTwo,@RequestParam String[] checkPath) {
         RestTemplate restTemplate = new RestTemplate();
         Object primaryTest, secondaryTest;
         try {
-            primaryTest = restTemplate.getForObject(urlOne, Object.class);//Get api call return as a json object
+            primaryTest = restTemplate.getForObject(urlOne, Object.class);//Get api call return as a json object for both calls.
             secondaryTest = restTemplate.getForObject(urlTwo, Object.class);
         } catch (IllegalArgumentException e) {
             return "IllegalArgumentException";
@@ -84,9 +97,9 @@ public class MainController {
             return "HttpClientErrorException";
         } catch (ClassCastException e) {
             return "response is not in json format";
-        }
+        } //Test for the type of Object our response is.
         if (primaryTest.getClass() == JSONObject.class && secondaryTest.getClass() == JSONObject.class) {
-            JSONObject object = (JSONObject) primaryTest;
+            JSONObject object = (JSONObject) primaryTest; //Convert the objects to JSONObjects.
             JSONObject object2 = (JSONObject) secondaryTest;
             for (int i = 0; i < checkPath.length - 1; i++) {
                 object = object.getJSONObject(checkPath[i]);
@@ -126,6 +139,12 @@ public class MainController {
         return urlBase;
     }
 
+    /** This is the subset test
+     * @param urlBase
+     * @param values
+     * @param checkPath
+     * @return
+     */
     @GetMapping(path="/subset")
     public @ResponseBody String checkSubset(@RequestParam String urlBase, @RequestParam String[] values, @RequestParam String[] checkPath) {
         RestTemplate restTemplate = new RestTemplate();
@@ -234,8 +253,6 @@ public class MainController {
      * @param checkPath
      * @return
      */
-
-    // test/disjoint?urlOne=someURL&urlTwo=someURL&checkPath=one,two,three
     @GetMapping(path="/disjoint")
     public @ResponseBody String checkDisjoint(@RequestParam String urlOne, @RequestParam String urlTwo, @RequestParam String[] checkPath) {
         RestTemplate restTemplate = new RestTemplate(); //Creates the rest template for API calls to RESTful apis.
