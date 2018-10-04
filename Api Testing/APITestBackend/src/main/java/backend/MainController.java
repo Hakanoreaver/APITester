@@ -101,7 +101,7 @@ public class MainController {
         if (primaryTest.getClass() == JSONObject.class && secondaryTest.getClass() == JSONObject.class) {
             JSONObject object = (JSONObject) primaryTest; //Convert the objects to JSONObjects.
             JSONObject object2 = (JSONObject) secondaryTest;
-            for (int i = 0; i < checkPath.length - 1; i++) {
+            for (int i = 0; i < checkPath.length - 1; i++) { //Find the checkpath
                 object = object.getJSONObject(checkPath[i]);
                 object2 = object2.getJSONObject(checkPath[i]);
             }
@@ -111,7 +111,7 @@ public class MainController {
             else return "Equivalence does not hold true";
     }
         else if (primaryTest.getClass() == JSONArray.class && secondaryTest.getClass() == JSONArray.class) {
-            JSONArray array = (JSONArray) primaryTest;
+            JSONArray array = (JSONArray) primaryTest; //Test for JSONArray
             JSONArray array2 = (JSONArray) secondaryTest;
             if(testEquality(array, array2)) {
                 return "Equivalence does hold true";
@@ -119,7 +119,7 @@ public class MainController {
             else return "Equivalence does not hold true";
         }
         else if (primaryTest.getClass() == ArrayList.class && secondaryTest.getClass() == ArrayList.class) {
-            List list = java.util.Arrays.asList(primaryTest);
+            List list = java.util.Arrays.asList(primaryTest); //Test for ArrayList
             List list2 = java.util.Arrays.asList(secondaryTest);
             if(testEquality(list, list2)) {
                 return "Equivalence does hold true";
@@ -157,10 +157,10 @@ public class MainController {
                 secondaryTests.add(restTemplate.getForObject(urlBase, Object.class));
             }
             if(primaryTest.getClass() == JSONObject.class) {
-                for(int i = 0; i < secondaryTests.size(); i++) {
-                    JSONObject object = (JSONObject) primaryTest;
+                for(int i = 0; i < secondaryTests.size(); i++) { //For each secondary result
+                    JSONObject object = (JSONObject) primaryTest; //Convert Object to JSONObject
                     JSONObject object2 = (JSONObject) secondaryTests.get(i);
-                    for (int x = 0; x < checkPath.length - 1; x++) {
+                    for (int x = 0; x < checkPath.length - 1; x++) { //Find the checkPath
                         object = object.getJSONObject(checkPath[x]);
                         object2 = object2.getJSONObject(checkPath[x]);
                     }
@@ -170,7 +170,7 @@ public class MainController {
                 }
                 return "subset test does hold true";
             }
-            if(primaryTest.getClass() == JSONArray.class) {
+            if(primaryTest.getClass() == JSONArray.class) { //Test for JSONArray
                 for(int i = 0; i < secondaryTests.size(); i++) {
                     JSONArray array = (JSONArray) primaryTest;
                     JSONArray array2 = (JSONArray) secondaryTests.get(i);
@@ -180,7 +180,7 @@ public class MainController {
                 }
                 return "subset test does hold true";
             }
-            else if(primaryTest.getClass() == ArrayList.class) {
+            else if(primaryTest.getClass() == ArrayList.class) { //Test for Subset
                 for(int i = 0; i < secondaryTests.size(); i++) {
                     List list = java.util.Arrays.asList(primaryTest);
                     List list2 = java.util.Arrays.asList(secondaryTests.get(i));;
