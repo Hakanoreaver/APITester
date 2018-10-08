@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <script type="text/javascript">
-	function sendTest() {
+	function sendEqualityTest() {
 		alert("test sent");
 		var urlString = document.getElementById("url").value;
 		var arg1 = document.getElementById("firstArg").value;
@@ -14,7 +14,7 @@
 		alert(ajax.responseText);
 	}
 
-	function sendTest1() {
+	function sendEquivalenceTest() {
 		alert("test sent");
 		var arg1 = document.getElementById("url1").value;
 		var arg2 = document.getElementById("url2").value;
@@ -24,24 +24,122 @@
 		ajax.send();
 		alert(ajax.responseText); 
 	}
+
 </script>
+
+<style>
+	h1{
+		color: royalblue;
+	}
+
+	.accordion {
+		background-color: royalblue;
+		color: white;
+		cursor: pointer;
+		padding: 18px;
+		width: 100%;
+		border: none;
+		text-align: left;
+		outline: none;
+		font-size: 15px;
+		transition: 0.4s;
+	}
+
+	.accordion:hover {
+		background-color: white;
+		color: royalblue;
+	}
+
+	.active{
+		background-color: white;
+		color: royalblue;
+		border: solid royalblue;
+	}
+
+	.panel {
+		padding: 0 18px;
+		display: none;
+		background-color: white;
+		overflow: hidden;
+	}
+
+	button {
+		background-color: royalblue;
+		border: none;
+		color: white;
+		padding: 1rem;
+		text-align: center;
+		text-decoration: none;
+		display: inline-block;
+		font-size: 16px;
+		margin: 4px 2px;
+		-webkit-transition-duration: 0.4s; /* Safari */
+		transition-duration: 0.4s;
+		cursor: pointer;
+	}
+
+	button:hover {
+		background-color: white;
+		color: royalblue;
+		border: solid royalblue;
+	}
+
+	input[type=text] {
+		width: 10%;
+		padding: 12px 20px;
+		margin: 8px 0;
+		box-sizing: border-box;
+	}
+</style>
+
 <html>
 <head>
 	<title>API Tester Testing</title>
 </head>
 <body>
-	<h1>Equality</h1>
-	<input type="text" id="url" placeholder="url base">
-	<input type="text" id="firstArg" placeholder="arg 1">
-	<input type="text" id="secondArg" placeholder="arg 2">
-	<input type="text" id="firstValue" placeholder="val 1">
-	<input type="text" id="secondValue" placeholder="val 2">
-	<button onclick="sendTest()">Send Test</button>
+<h1>Metamorphic Testing Tool for REST APIs</h1>
+<br>
 
-	<h1>Equivalence</h1>
-	<input type="text" id="url1" placeholder="ulr 1">
-	<input type="text" id="url2" placeholder="url 2">
-	<input type="text" id="path" placeholder="path">
-	<button onclick="sendTest1()">Send Test</button>
+	<button class="accordion">Equality Test</button>
+	<div class="panel">
+		<br>
+		<input type="text" id="url" placeholder="url base">
+		<input type="text" id="firstArg" placeholder="arg 1">
+		<input type="text" id="secondArg" placeholder="arg 2">
+		<input type="text" id="firstValue" placeholder="val 1">
+		<input type="text" id="secondValue" placeholder="val 2">
+		<button onclick="sendEqualityTest()">Send Test</button>
+		<br><br>
+
+	</div>
+
+	<button class="accordion">Equivalence Test</button>
+	<div class="panel">
+		<br>
+		<input type="text" id="url1" placeholder="ulr 1">
+		<input type="text" id="url2" placeholder="url 2">
+		<input type="text" id="path" placeholder="path">
+		<button onclick="sendEquivalenceTest()">Send Test</button>
+		<br>
+	</div>
+
+	<!-- for accordions -->
+	<script>
+        var acc = document.getElementsByClassName("accordion");
+        var i;
+
+        for (i = 0; i < acc.length; i++) {
+            acc[i].addEventListener("click", function() {
+                this.classList.toggle("active");
+                var panel = this.nextElementSibling;
+                if (panel.style.display === "block") {
+                    panel.style.display = "none";
+                } else {
+                    panel.style.display = "block";
+                }
+            });
+        }
+	</script>
+
 </body>
 </html>
