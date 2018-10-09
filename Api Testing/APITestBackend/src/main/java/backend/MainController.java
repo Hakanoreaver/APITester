@@ -57,15 +57,15 @@ public class MainController {
                 argValues[x] = temp2;
                 urlArgs[x] = temp1;
             }
-                try {
-                    url = buildURL(urlBase, urlArgs, argValues);//Build a new url for the re ordered arguments
-                    secondaryTests[i-1] = restTemplate.getForObject(url, String.class);//Store the response as a JSON object
-                } catch (IllegalArgumentException e) {
-                    return "IllegalArgumentException at secondary for url " + url;
-                }
-                catch (HttpClientErrorException e) {
-                    return "HttpClientErrorException at secondary for url " + url;
-                }
+            try {
+                url = buildURL(urlBase, urlArgs, argValues);//Build a new url for the re ordered arguments
+                secondaryTests[i-1] = restTemplate.getForObject(url, String.class);//Store the response as a JSON object
+            } catch (IllegalArgumentException e) {
+                return "IllegalArgumentException at secondary for url " + url;
+            }
+            catch (HttpClientErrorException e) {
+                return "HttpClientErrorException at secondary for url " + url;
+            }
 
         }
         boolean testsHeldTrue = true;
@@ -109,7 +109,7 @@ public class MainController {
                 return "Equivalence does hold true";
             }
             else return "Equivalence does not hold true";
-    }
+        }
         else if (primaryTest.getClass() == JSONArray.class && secondaryTest.getClass() == JSONArray.class) {
             JSONArray array = (JSONArray) primaryTest; //Test for JSONArray
             JSONArray array2 = (JSONArray) secondaryTest;
@@ -297,25 +297,90 @@ public class MainController {
 
     @GetMapping(path="/complete")
     public @ResponseBody String checkComplete(@RequestParam String urlBase, @RequestParam String[] values, @RequestParam String[] checkPath) {
-        RestTemplate restTemplate = new RestTemplate();
+        RestTemplate restTemplate = new RestTemplate(); //Create the rest template for RESTful api calls
 
-        Object firstResponse = restTemplate.getForObject(urlBase, Object.class);
+        Object firstResponse = restTemplate.getForObject(urlBase, Object.class); //Get the primary response
         ArrayList<Object> secondaryResponses = new ArrayList<>();
-        for (int i = 1; i < values.length; i++) {
+        for (int i = 1; i < values.length; i++) { //Get the secondary responses
             urlBase.replace(values[i-1], values[i]);
             secondaryResponses.add(restTemplate.getForObject(urlBase, Object.class));
+        }
+        if(firstResponse.getClass() == JSONArray.class) { //Test for JSONArray
+            JSONArray array = (JSONArray) firstResponse; //Cast first response to JSONArray
+            ArrayList<JSONArray> secondaryTests = new ArrayList<>(); //Create a list of JSONArrays
+            for(int x = 0; x < secondaryResponses.size(); x++) {
+                JSONArray temp = (JSONArray) secondaryResponses.get(x); //Cast each secondary response to JSONArray and add it to the list
+                secondaryTests.add(temp);
+            }
+            if(!testComplete(secondaryTests, array)) { //Test for complete
+                return "Subset test does not hold true";
+            }
+            return "subset test does hold true";
+        }
+        else if(firstResponse.getClass() == ArrayList.class) { //Test for ArrayList
+                List list = java.util.Arrays.asList(firstResponse); //Convert primary response to list
+                ArrayList<List> secondaryTests = new ArrayList<>(); //Create a list of lists
+                for(int x = 0; x < secondaryResponses.size(); x++) {
+                    secondaryTests.add(java.util.Arrays.asList(secondaryResponses.get(x))); //Add each secondary response to the list of lists
+                }
+                if(!testComplete(secondaryTests, list)) { //Test for complete
+                    return "Subset test does not hold true";
+                }
+            return "subset test does hold true";
         }
 
         return "";
     }
 
     public boolean testComplete(ArrayList<JSONArray> secondaryResponses, JSONArray firstResponse) {
-
+        ArrayList<String> match = new ArrayList<>();
+        ArrayList<String> test = new ArrayList<>(); //Create two arrays of strings
+        for (int i = 0; i < firstResponse.length(); i++) {
+            test.add(firstResponse.get(i).toString()); //Add the first responses as strings
+        }
+        for(int i = 0; i < secondaryResponses.size(); i++) { //Add the secondary responses as strings
+            for(int x = 0; x < secondaryResponses.get(i).length(); x++) {
+                match.add(secondaryResponses.get(i).get(x).toString());
+            }
+        }
+        while(test.size() > 0) { //Test each element to make sure they all match
+            boolean matched = false;
+            for (int i = 0; i < match.size(); i++) {
+                if (test.get(0).equals(match.get(i)) && !matched) {
+                    test.remove(0);
+                    match.remove(i);
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) return false;
+        }
         return true;
     }
 
     public boolean testComplete(ArrayList<List> secondaryResponses, List firstResponse) {
-
+        ArrayList<String> match = new ArrayList<>();
+        ArrayList<String> test = new ArrayList<>();//Create two arrays of strings
+        for (int i = 0; i < firstResponse.size(); i++) {
+            test.add(firstResponse.get(i).toString());//Add the first responses as strings
+        }
+        for(int i = 0; i < secondaryResponses.size(); i++) {
+            for(int x = 0; x < secondaryResponses.get(i).size(); x++) {//Add the secondary responses as strings
+                match.add(secondaryResponses.get(i).get(x).toString());
+            }
+        }
+        while(test.size() > 0) {
+            boolean matched = false;
+            for (int i = 0; i < match.size(); i++) {//Test each element to make sure they all match
+                if (test.get(0).equals(match.get(i)) && !matched) {
+                    test.remove(0);
+                    match.remove(i);
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) return false;
+        }
         return true;
     }
 }
