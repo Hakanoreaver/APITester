@@ -20,15 +20,22 @@ import java.util.List;
 @Controller    // This means that this class is a Controller
 @RequestMapping(path="/backend") // This means URL's start with /backend (after Application path)
 public class MainController {
+    //Test so that we can see if the server is running.
     @GetMapping(path="/test")
-    public @ResponseBody String sendTest () {
-        RestTemplate test = new RestTemplate();
-        return test.getForObject("http://localhost:8080/demo/event/byDate?month=4&year=1990", String.class);
+    public @ResponseBody boolean sendTest () {
+        return true;
     }
 
+    /** This is the equality test
+     * @param urlBase
+     * @param urlArgs
+     * @param argValues
+     * @return
+     * @throws URISyntaxException
+     */
     @GetMapping(path="/equality")
     public @ResponseBody String checkEquality(@RequestParam String urlBase, @RequestParam String[] urlArgs, @RequestParam String[] argValues) throws URISyntaxException {
-        if (urlArgs.length != argValues.length) return "Argument and value amounts do no match";
+        if (urlArgs.length != argValues.length) return "Argument and value amounts do no match"; //Test to see if we have the same amount of values as arguments.
         String url = buildURL(urlBase, urlArgs, argValues); // Build our first url for primary call.
         RestTemplate restTemplate = new RestTemplate(); //Rest template allows us to call RESTful API
         String primaryTest;
@@ -40,7 +47,7 @@ public class MainController {
         catch (HttpClientErrorException e) {
             return "HttpClientErrorException at primary for url " + url;
         }
-        String[] secondaryTests = new String[urlArgs.length - 1];
+        String[] secondaryTests = new String[urlArgs.length - 1]; //An array of strings to store our args and values.
         for (int i = 1; i < urlArgs.length; i++) {
             for(int x = 1; x < urlArgs.length; x++) {
                 String temp1 = urlArgs[0]; //For each variation of the arguments move the array up by an index of 1
@@ -50,15 +57,15 @@ public class MainController {
                 argValues[x] = temp2;
                 urlArgs[x] = temp1;
             }
-                try {
-                    url = buildURL(urlBase, urlArgs, argValues);//Build a new url for the re ordered arguments
-                    secondaryTests[i-1] = restTemplate.getForObject(url, String.class);//Store the response as a JSON object
-                } catch (IllegalArgumentException e) {
-                    return "IllegalArgumentException at secondary for url " + url;
-                }
-                catch (HttpClientErrorException e) {
-                    return "HttpClientErrorException at secondary for url " + url;
-                }
+            try {
+                url = buildURL(urlBase, urlArgs, argValues);//Build a new url for the re ordered arguments
+                secondaryTests[i-1] = restTemplate.getForObject(url, String.class);//Store the response as a JSON object
+            } catch (IllegalArgumentException e) {
+                return "IllegalArgumentException at secondary for url " + url;
+            }
+            catch (HttpClientErrorException e) {
+                return "HttpClientErrorException at secondary for url " + url;
+            }
 
         }
         boolean testsHeldTrue = true;
@@ -71,12 +78,18 @@ public class MainController {
         else return "Equality test does not hold true";
     }
 
+    /** This is the equivalence test
+     * @param urlOne
+     * @param urlTwo
+     * @param checkPath
+     * @return
+     */
     @GetMapping(path="/equivalence")
     public @ResponseBody String checkEquivalence(@RequestParam String urlOne, @RequestParam String urlTwo,@RequestParam String[] checkPath) {
         RestTemplate restTemplate = new RestTemplate();
         Object primaryTest, secondaryTest;
         try {
-            primaryTest = restTemplate.getForObject(urlOne, Object.class);//Get api call return as a json object
+            primaryTest = restTemplate.getForObject(urlOne, Object.class);//Get api call return as a json object for both calls.
             secondaryTest = restTemplate.getForObject(urlTwo, Object.class);
         } catch (IllegalArgumentException e) {
             return "IllegalArgumentException";
@@ -84,11 +97,11 @@ public class MainController {
             return "HttpClientErrorException";
         } catch (ClassCastException e) {
             return "response is not in json format";
-        }
+        } //Test for the type of Object our response is.
         if (primaryTest.getClass() == JSONObject.class && secondaryTest.getClass() == JSONObject.class) {
-            JSONObject object = (JSONObject) primaryTest;
+            JSONObject object = (JSONObject) primaryTest; //Convert the objects to JSONObjects.
             JSONObject object2 = (JSONObject) secondaryTest;
-            for (int i = 0; i < checkPath.length - 1; i++) {
+            for (int i = 0; i < checkPath.length - 1; i++) { //Find the checkpath
                 object = object.getJSONObject(checkPath[i]);
                 object2 = object2.getJSONObject(checkPath[i]);
             }
@@ -96,9 +109,9 @@ public class MainController {
                 return "Equivalence does hold true";
             }
             else return "Equivalence does not hold true";
-    }
+        }
         else if (primaryTest.getClass() == JSONArray.class && secondaryTest.getClass() == JSONArray.class) {
-            JSONArray array = (JSONArray) primaryTest;
+            JSONArray array = (JSONArray) primaryTest; //Test for JSONArray
             JSONArray array2 = (JSONArray) secondaryTest;
             if(testEquality(array, array2)) {
                 return "Equivalence does hold true";
@@ -106,7 +119,7 @@ public class MainController {
             else return "Equivalence does not hold true";
         }
         else if (primaryTest.getClass() == ArrayList.class && secondaryTest.getClass() == ArrayList.class) {
-            List list = java.util.Arrays.asList(primaryTest);
+            List list = java.util.Arrays.asList(primaryTest); //Test for ArrayList
             List list2 = java.util.Arrays.asList(secondaryTest);
             if(testEquality(list, list2)) {
                 return "Equivalence does hold true";
@@ -126,6 +139,12 @@ public class MainController {
         return urlBase;
     }
 
+    /** This is the subset test
+     * @param urlBase
+     * @param values
+     * @param checkPath
+     * @return
+     */
     @GetMapping(path="/subset")
     public @ResponseBody String checkSubset(@RequestParam String urlBase, @RequestParam String[] values, @RequestParam String[] checkPath) {
         RestTemplate restTemplate = new RestTemplate();
@@ -138,10 +157,10 @@ public class MainController {
                 secondaryTests.add(restTemplate.getForObject(urlBase, Object.class));
             }
             if(primaryTest.getClass() == JSONObject.class) {
-                for(int i = 0; i < secondaryTests.size(); i++) {
-                    JSONObject object = (JSONObject) primaryTest;
+                for(int i = 0; i < secondaryTests.size(); i++) { //For each secondary result
+                    JSONObject object = (JSONObject) primaryTest; //Convert Object to JSONObject
                     JSONObject object2 = (JSONObject) secondaryTests.get(i);
-                    for (int x = 0; x < checkPath.length - 1; x++) {
+                    for (int x = 0; x < checkPath.length - 1; x++) { //Find the checkPath
                         object = object.getJSONObject(checkPath[x]);
                         object2 = object2.getJSONObject(checkPath[x]);
                     }
@@ -151,7 +170,7 @@ public class MainController {
                 }
                 return "subset test does hold true";
             }
-            if(primaryTest.getClass() == JSONArray.class) {
+            if(primaryTest.getClass() == JSONArray.class) { //Test for JSONArray
                 for(int i = 0; i < secondaryTests.size(); i++) {
                     JSONArray array = (JSONArray) primaryTest;
                     JSONArray array2 = (JSONArray) secondaryTests.get(i);
@@ -161,7 +180,7 @@ public class MainController {
                 }
                 return "subset test does hold true";
             }
-            else if(primaryTest.getClass() == ArrayList.class) {
+            else if(primaryTest.getClass() == ArrayList.class) { //Test for Subset
                 for(int i = 0; i < secondaryTests.size(); i++) {
                     List list = java.util.Arrays.asList(primaryTest);
                     List list2 = java.util.Arrays.asList(secondaryTests.get(i));;
@@ -234,8 +253,6 @@ public class MainController {
      * @param checkPath
      * @return
      */
-
-    // test/disjoint?urlOne=someURL&urlTwo=someURL&checkPath=one,two,three
     @GetMapping(path="/disjoint")
     public @ResponseBody String checkDisjoint(@RequestParam String urlOne, @RequestParam String urlTwo, @RequestParam String[] checkPath) {
         RestTemplate restTemplate = new RestTemplate(); //Creates the rest template for API calls to RESTful apis.
@@ -280,26 +297,90 @@ public class MainController {
 
     @GetMapping(path="/complete")
     public @ResponseBody String checkComplete(@RequestParam String urlBase, @RequestParam String[] values, @RequestParam String[] checkPath) {
-        RestTemplate restTemplate = new RestTemplate();
+        RestTemplate restTemplate = new RestTemplate(); //Create the rest template for RESTful api calls
 
-        Object firstResponse = restTemplate.getForObject(urlBase, Object.class);
+        Object firstResponse = restTemplate.getForObject(urlBase, Object.class); //Get the primary response
         ArrayList<Object> secondaryResponses = new ArrayList<>();
-        for (int i = 1; i < values.length; i++) {
+        for (int i = 1; i < values.length; i++) { //Get the secondary responses
             urlBase.replace(values[i-1], values[i]);
             secondaryResponses.add(restTemplate.getForObject(urlBase, Object.class));
+        }
+        if(firstResponse.getClass() == JSONArray.class) { //Test for JSONArray
+            JSONArray array = (JSONArray) firstResponse; //Cast first response to JSONArray
+            ArrayList<JSONArray> secondaryTests = new ArrayList<>(); //Create a list of JSONArrays
+            for(int x = 0; x < secondaryResponses.size(); x++) {
+                JSONArray temp = (JSONArray) secondaryResponses.get(x); //Cast each secondary response to JSONArray and add it to the list
+                secondaryTests.add(temp);
+            }
+            if(!testComplete(secondaryTests, array)) { //Test for complete
+                return "Subset test does not hold true";
+            }
+            return "subset test does hold true";
+        }
+        else if(firstResponse.getClass() == ArrayList.class) { //Test for ArrayList
+                List list = java.util.Arrays.asList(firstResponse); //Convert primary response to list
+                ArrayList<List> secondaryTests = new ArrayList<>(); //Create a list of lists
+                for(int x = 0; x < secondaryResponses.size(); x++) {
+                    secondaryTests.add(java.util.Arrays.asList(secondaryResponses.get(x))); //Add each secondary response to the list of lists
+                }
+                if(!testComplete(secondaryTests, list)) { //Test for complete
+                    return "Subset test does not hold true";
+                }
+            return "subset test does hold true";
         }
 
         return "";
     }
 
     public boolean testComplete(ArrayList<JSONArray> secondaryResponses, JSONArray firstResponse) {
-
+        ArrayList<String> match = new ArrayList<>();
+        ArrayList<String> test = new ArrayList<>(); //Create two arrays of strings
+        for (int i = 0; i < firstResponse.length(); i++) {
+            test.add(firstResponse.get(i).toString()); //Add the first responses as strings
+        }
+        for(int i = 0; i < secondaryResponses.size(); i++) { //Add the secondary responses as strings
+            for(int x = 0; x < secondaryResponses.get(i).length(); x++) {
+                match.add(secondaryResponses.get(i).get(x).toString());
+            }
+        }
+        while(test.size() > 0) { //Test each element to make sure they all match
+            boolean matched = false;
+            for (int i = 0; i < match.size(); i++) {
+                if (test.get(0).equals(match.get(i)) && !matched) {
+                    test.remove(0);
+                    match.remove(i);
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) return false;
+        }
         return true;
     }
 
     public boolean testComplete(ArrayList<List> secondaryResponses, List firstResponse) {
-
+        ArrayList<String> match = new ArrayList<>();
+        ArrayList<String> test = new ArrayList<>();//Create two arrays of strings
+        for (int i = 0; i < firstResponse.size(); i++) {
+            test.add(firstResponse.get(i).toString());//Add the first responses as strings
+        }
+        for(int i = 0; i < secondaryResponses.size(); i++) {
+            for(int x = 0; x < secondaryResponses.get(i).size(); x++) {//Add the secondary responses as strings
+                match.add(secondaryResponses.get(i).get(x).toString());
+            }
+        }
+        while(test.size() > 0) {
+            boolean matched = false;
+            for (int i = 0; i < match.size(); i++) {//Test each element to make sure they all match
+                if (test.get(0).equals(match.get(i)) && !matched) {
+                    test.remove(0);
+                    match.remove(i);
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) return false;
+        }
         return true;
     }
-
 }
