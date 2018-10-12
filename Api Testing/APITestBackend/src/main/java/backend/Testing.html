@@ -1,47 +1,89 @@
 <!DOCTYPE html>
-<script type="text/javascript">
-	function sendTest() {
-		alert("test sent");
-		var urlString = document.getElementById("url").value;
-		var arg1 = document.getElementById("firstArg").value;
-		var arg2 = document.getElementById("secondArg").value;
-		var val1 = document.getElementById("firstValue").value;
-		var val2 = document.getElementById("secondValue").value;
-		alert(arg1);
-		var ajax = new XMLHttpRequest();
-		ajax.open('GET', 'http://localhost:8090/backend/equality?'+'urlBase=' + urlString + '&urlArgs=' +arg1 + ',' + arg2 + '&argValues=' + val1 + ',' + val2 , false);
-		ajax.send();
-		alert(ajax.responseText);
-	}
-
-	function sendTest1() {
-		alert("test sent");
-		var arg1 = document.getElementById("url1").value;
-		var arg2 = document.getElementById("url2").value;
-		var path = document.getElementById("path").value;
-		var ajax = new XMLHttpRequest();
-		ajax.open('GET', 'http://localhost:8090/backend/equivalence?'+'urlOne=' + arg1 + '&urlTwo=' +arg2 +'&checkPath=' + path, false);
-		ajax.send();
-		alert(ajax.responseText); 
-	}
-</script>
-<html>
 <head>
 	<title>API Tester Testing</title>
-</head>
-<body>
-	<h1>Equality</h1>
-	<input type="text" id="url" placeholder="url base">
-	<input type="text" id="firstArg" placeholder="arg 1">
-	<input type="text" id="secondArg" placeholder="arg 2">
-	<input type="text" id="firstValue" placeholder="val 1">
-	<input type="text" id="secondValue" placeholder="val 2">
-	<button onclick="sendTest()">Send Test</button>
 
-	<h1>Equivalence</h1>
-	<input type="text" id="url1" placeholder="ulr 1">
-	<input type="text" id="url2" placeholder="url 2">
-	<input type="text" id="path" placeholder="path">
-	<button onclick="sendTest1()">Send Test</button>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="app.js"></script>
+	<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body>
+<h1>Metamorphic Testing Tool for REST APIs</h1>
+<h2>API Access Token: <input id="access-token" type="text"></h2>
+	<button class="accordion">Equality Test</button>
+	<div class="panel">
+		<br>
+		<input type="text" id="url" placeholder="url base">
+		<input type="text" id="firstArg" placeholder="arg 1">
+		<input type="text" id="secondArg" placeholder="arg 2">
+		<input type="text" id="firstValue" placeholder="val 1">
+		<input type="text" id="secondValue" placeholder="val 2">
+		<button onclick="sendEqualityTest()">Send Test</button>
+		<br><br>
+
+	</div>
+
+	<button class="accordion">Equivalence Test</button>
+	<div class="panel">
+		<br>
+		<input type="text" id="url1" placeholder="url 1">
+		<input type="text" id="url2" placeholder="url 2">
+		<input type="text" id="path" placeholder="path">
+		<button onclick="sendEquivalenceTest()">Send Test</button>
+		<br><br>
+	</div>
+
+	<button class="accordion">Subset Test</button>
+	<div class="panel">
+		<br>
+		<input type="text" id="subsetURLBase" placeholder="url base">
+		<input type="text" id="subsetValues" placeholder="values">
+		<input type="text" id="subsetPath" placeholder="path">
+		<button onclick="sendSubsetTest()">Send Test</button>
+		<br><br>
+	</div>
+
+	<button class="accordion">Disjoint Test</button>
+	<div class="panel">
+		<br>
+		<input type="text" id="disjointURL1" placeholder="url 1">
+		<input type="text" id="disjointURL2" placeholder="url 2">
+		<input type="text" id="disjointPath" placeholder="path">
+		<button onclick="sendDisjointTest()">Send Test</button>
+		<br><br>
+	</div>
+
+	<button class="accordion">Complete Test</button>
+	<div class="panel">
+		<br>
+		<input type="text" id="completeURLBase" placeholder="url base">
+		<input type="text" id="completeURLValues" placeholder="values">
+		<input type="text" id="completeURLPath" placeholder="path">
+		<button onclick="sendCompleteTest()">Send Test</button>
+		<br><br>
+	</div>
+	<br>
+	<h2>Spotify Helper Functions</h2>
+<button onclick="spotifyAPIAuth()">Generate Spotify Token</button>
+<button onclick="getTopTracks()">Test Spotify API</button>
+
+	<!-- for accordions -->
+	<script>
+        var acc = document.getElementsByClassName("accordion");
+        var i;
+
+        for (i = 0; i < acc.length; i++) {
+            acc[i].addEventListener("click", function() {
+                this.classList.toggle("active");
+                var panel = this.nextElementSibling;
+                if (panel.style.display === "block") {
+                    panel.style.display = "none";
+                } else {
+                    panel.style.display = "block";
+                }
+            });
+        }
+	</script>
+
 </body>
 </html>

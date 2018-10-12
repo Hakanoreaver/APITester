@@ -89,7 +89,7 @@ public class MainController {
             if(!primaryTest.equals(secondaryTests[i])) testsHeldTrue = false;
         }
         if(testsHeldTrue){
-            return "Equalitytest holds true";
+            return "Equality test holds true";
         }
         else return "Equality test does not hold true";
     }
@@ -321,7 +321,7 @@ public class MainController {
             }
             else return "Disjoint does hold true";
         }
-        //If the objects type is of ArrayList then we can do a similiar test to JSONArray with slightly different syntax.
+        //If the objects type is of ArrayList then we can do a similar test to JSONArray with slightly different syntax.
         else if(firstResponse.getClass() == ArrayList.class) {
             List list = java.util.Arrays.asList(firstResponse); //Convert first and second responses from Object to ArrayList.
             List list2 = java.util.Arrays.asList(secondResponse);
