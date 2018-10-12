@@ -1,19 +1,26 @@
 package backend;
 
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+import org.apache.tomcat.util.codec.binary.Base64;
+import org.json.JSONException;
 import org.json.JSONString;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.json.JSONObject;
 import org.json.JSONArray;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import sun.plugin.util.UserProfile;
 
 import java.net.URI;
-import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -23,21 +30,30 @@ public class MainController {
     //Test so that we can see if the server is running.
     @GetMapping(path="/test")
     public @ResponseBody boolean sendTest () {
+
         return true;
     }
-
+    HttpHeaders createHeaders(String username, String password){
+        return new HttpHeaders() {{
+            String auth = username + ":" + password;
+            byte[] encodedAuth = Base64.encodeBase64(
+                    auth.getBytes(Charset.forName("US-ASCII")) );
+            String authHeader = "Basic " + new String( encodedAuth );
+            set( "Authorization", authHeader );
+        }};
+    }
     /** This is the equality test
      * @param urlBase
      * @param urlArgs
      * @param argValues
      * @return
-     * @throws URISyntaxException
      */
     @GetMapping(path="/equality")
-    public @ResponseBody String checkEquality(@RequestParam String urlBase, @RequestParam String[] urlArgs, @RequestParam String[] argValues) throws URISyntaxException {
+    public @ResponseBody String checkEquality(@RequestParam String urlBase, @RequestParam String[] urlArgs, @RequestParam String[] argValues) {
         if (urlArgs.length != argValues.length) return "Argument and value amounts do no match"; //Test to see if we have the same amount of values as arguments.
         String url = buildURL(urlBase, urlArgs, argValues); // Build our first url for primary call.
         RestTemplate restTemplate = new RestTemplate(); //Rest template allows us to call RESTful API
+
         String primaryTest;
         try {
             primaryTest = restTemplate.getForObject(url, String.class);//Get api call return as a json object
@@ -85,12 +101,22 @@ public class MainController {
      * @return
      */
     @GetMapping(path="/equivalence")
-    public @ResponseBody String checkEquivalence(@RequestParam String urlOne, @RequestParam String urlTwo,@RequestParam String[] checkPath) {
-        RestTemplate restTemplate = new RestTemplate();
-        Object primaryTest, secondaryTest;
+    public @ResponseBody String checkEquivalence(@RequestParam String urlOne, @RequestParam String urlTwo,@RequestParam String[] checkPath, String token) {
+
+        ResponseEntity<Object> primary, secondary;
+        JSONObject primaryTest, secondaryTest;
         try {
-            primaryTest = restTemplate.getForObject(urlOne, Object.class);//Get api call return as a json object for both calls.
-            secondaryTest = restTemplate.getForObject(urlTwo, Object.class);
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + "BQAnU3zJTkpZqxN4lRW0kwVFzFB-iHUpG43322Of5rlNrlhrjbPKFE4epJrss4YHCQBKxVYBrszoQdgiPeSTndLJdyCF_ZKf9lqXQ8W7M_MmFcNFK9kNo-IdRyraSdVmBZaslTHjyOyOSHq7TD_Vgjo6CbVe5S4XiLbJwreILubymJGzcLiSr2E9");
+            HttpEntity entity = new HttpEntity(headers);
+
+            primary= restTemplate.exchange(urlOne, HttpMethod.GET, entity, Object.class);
+            secondary = restTemplate.exchange(urlTwo, HttpMethod.GET, entity, Object.class);
+
+            primaryTest = new JSONObject(primary.getBody());
+            secondaryTest = new JSONObject(secondary.getBody());
+
         } catch (IllegalArgumentException e) {
             return "IllegalArgumentException";
         } catch (HttpClientErrorException e) {
@@ -109,7 +135,7 @@ public class MainController {
                 return "Equivalence does hold true";
             }
             else return "Equivalence does not hold true";
-        }
+        } /**
         else if (primaryTest.getClass() == JSONArray.class && secondaryTest.getClass() == JSONArray.class) {
             JSONArray array = (JSONArray) primaryTest; //Test for JSONArray
             JSONArray array2 = (JSONArray) secondaryTest;
@@ -125,9 +151,9 @@ public class MainController {
                 return "Equivalence does hold true";
             }
             else return "Equivalence does not hold true";
-        }
+        }**/
         else if (primaryTest.getClass() != secondaryTest.getClass()) return "responses not in same format";
-        else return "response format not recognised";
+        else return primaryTest.getClass().toString();
     }
 
     public String buildURL(String urlBase, String[] args, String[] values) { //Simple function for building a url
@@ -183,7 +209,7 @@ public class MainController {
             else if(primaryTest.getClass() == ArrayList.class) { //Test for Subset
                 for(int i = 0; i < secondaryTests.size(); i++) {
                     List list = java.util.Arrays.asList(primaryTest);
-                    List list2 = java.util.Arrays.asList(secondaryTests.get(i));;
+                    List list2 = java.util.Arrays.asList(secondaryTests.get(i));
                     if(!testEquality(list, list2)) {
                         return "Subset test does not hold true";
                     }
@@ -200,50 +226,62 @@ public class MainController {
         return "";
     }
 
+    /**
+     * This is the equality test logic for JSONArray type
+     * @param testArray
+     * @param matchArray
+     * @return
+     */
     public boolean testEquality(JSONArray testArray, JSONArray matchArray) {
-        if (testArray.length() != matchArray.length()) return false;
-        ArrayList<String> match = new ArrayList<>();
+        if (testArray.length() != matchArray.length()) return false; //If array lengths do not match we can instantly return false.
+        ArrayList<String> match = new ArrayList<>(); //Convert the responses to strings.
         ArrayList<String> test = new ArrayList<>();
-        for (int i = 0; i < testArray.length(); i++) {
+        for (int i = 0; i < testArray.length(); i++) { //For each response change to string and add to ArrayList
             match.add(matchArray.get(i).toString());
             test.add(testArray.get(i).toString());
-        }
-        while(test.size() > 0) {
+        }//TODO test to see if this gives a runtime error for removal of array item.
+        while(test.size() > 0) { //While there are items to be checked continue
             boolean matched = false;
             for (int i = 0; i < match.size(); i++) {
-                if (test.get(0).equals(match.get(i)) && !matched) {
+                if (test.get(0).equals(match.get(i)) && !matched) { //Test each response to see which one matches
                     test.remove(0);
                     match.remove(i);
                     matched = true;
                     break;
                 }
             }
-            if (!matched) return false;
+            if (!matched) return false; //If none matched current test string return false
         }
-        return true;
+        return true; //If all test Strings matched return true.
     }
 
+    /**
+     * This is the equality test logic for ArrayList type.
+     * @param testArray
+     * @param matchArray
+     * @return
+     */
     public boolean testEquality(List testArray, List matchArray) {
-        if (testArray.size() != matchArray.size()) return false;
-        ArrayList<String> match = new ArrayList<>();
+        if (testArray.size() != matchArray.size()) return false;//If array lengths do not match we can instantly return false.
+        ArrayList<String> match = new ArrayList<>(); //Convert the responses to strings.
         ArrayList<String> test = new ArrayList<>();
-        for (int i = 0; i < testArray.size(); i++) {
+        for (int i = 0; i < testArray.size(); i++) { //For each response change to string and add to ArrayList
             match.add(matchArray.get(i).toString());
             test.add(testArray.get(i).toString());
         }
-        while(test.size() > 0) {
+        while(test.size() > 0) { //While there are items to be checked continue
             boolean matched = false;
             for (int i = 0; i < match.size(); i++) {
-                if (test.get(0).equals(match.get(i)) && !matched) {
+                if (test.get(0).equals(match.get(i)) && !matched) { //Test each response to see which one matches
                     test.remove(0);
                     match.remove(i);
                     matched = true;
                     break;
                 }
             }
-            if (!matched) return false;
+            if (!matched) return false; //If none matched current test string return false
         }
-        return true;
+        return true;//If all test Strings matched return true.
     }
 
     /** The disjoint test expects the two result sets to be completely different from one another.
@@ -286,7 +324,7 @@ public class MainController {
         //If the objects type is of ArrayList then we can do a similiar test to JSONArray with slightly different syntax.
         else if(firstResponse.getClass() == ArrayList.class) {
             List list = java.util.Arrays.asList(firstResponse); //Convert first and second responses from Object to ArrayList.
-            List list2 = java.util.Arrays.asList(secondResponse);;
+            List list2 = java.util.Arrays.asList(secondResponse);
             if(!testEquality(list, list2)) {
                 return "Disjoint does not hold true"; //If the test for equality returns true then the two objects are not in disjoint.
             }
@@ -295,6 +333,13 @@ public class MainController {
         else return "Unknown Format type " + firstResponse.getClass(); //This will return the objects type and an error message if the response format is not known.
     }
 
+    /**
+     * This is the complete test. This checks to see that all sub queries add up to the base query
+     * @param urlBase
+     * @param values
+     * @param checkPath
+     * @return
+     */
     @GetMapping(path="/complete")
     public @ResponseBody String checkComplete(@RequestParam String urlBase, @RequestParam String[] values, @RequestParam String[] checkPath) {
         RestTemplate restTemplate = new RestTemplate(); //Create the rest template for RESTful api calls
@@ -332,6 +377,12 @@ public class MainController {
         return "";
     }
 
+    /**
+     * Logic for complete test for JSONArray type.
+     * @param secondaryResponses
+     * @param firstResponse
+     * @return
+     */
     public boolean testComplete(ArrayList<JSONArray> secondaryResponses, JSONArray firstResponse) {
         ArrayList<String> match = new ArrayList<>();
         ArrayList<String> test = new ArrayList<>(); //Create two arrays of strings
@@ -358,6 +409,12 @@ public class MainController {
         return true;
     }
 
+    /**
+     * Logic for complete test for ArrayList type.
+     * @param secondaryResponses
+     * @param firstResponse
+     * @return
+     */
     public boolean testComplete(ArrayList<List> secondaryResponses, List firstResponse) {
         ArrayList<String> match = new ArrayList<>();
         ArrayList<String> test = new ArrayList<>();//Create two arrays of strings
@@ -382,5 +439,36 @@ public class MainController {
             if (!matched) return false;
         }
         return true;
+    }
+
+    /**
+     * This is the difference test. This checks to see if one value of return objects that are supposed to be different are indeed different.
+     * @param urlOne
+     * @param urlTwo
+     * @param checkPath
+     * @return
+     */
+    @GetMapping(path="/difference")
+    public @ResponseBody String checkDifference(@RequestParam String urlOne, @RequestParam String urlTwo, @RequestParam String[] checkPath) {
+
+        RestTemplate restTemplate = new RestTemplate(); //Create rest template
+        Object firstResponse = restTemplate.getForObject(urlOne, Object.class); //Get our responses as objects
+        Object secondResponse = restTemplate.getForObject(urlTwo, Object.class);
+
+        try {
+            JSONObject object = (JSONObject) firstResponse; //Convert the objects to JSONObjects.
+            JSONObject object2 = (JSONObject) secondResponse;
+            for (int i = 0; i < checkPath.length - 1; i++) { //Find the checkpath
+                object = object.getJSONObject(checkPath[i]);
+                object2 = object2.getJSONObject(checkPath[i]);
+            }
+            if(!object.get(checkPath[checkPath.length -1]).equals(checkPath[checkPath.length -1])) { //If the part we are checking for differnce is not the same return test held true
+                return "Difference does hold true";
+            }
+            else return "Difference does not hold true"; //Else return test held false
+        } catch (JSONException e) {
+            return "Response not of type JSONObject"; //Need to add in more catches for different errors.
+        }
+
     }
 }
