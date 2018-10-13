@@ -101,26 +101,30 @@ public class MainController {
      * @return
      */
     @GetMapping(path="/equivalence")
-    public @ResponseBody String checkEquivalence(@RequestParam String urlOne, @RequestParam String urlTwo,@RequestParam String[] checkPath, String token) {
+    public @ResponseBody String checkEquivalence(@RequestParam String urlOne, @RequestParam String urlTwo,@RequestParam String[] checkPath, String name, String token) {
 
-        ResponseEntity<Object> primary, secondary;
+        HttpEntity<Object> primary, secondary;
         JSONObject primaryTest, secondaryTest;
         try {
             RestTemplate restTemplate = new RestTemplate();
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + "BQAnU3zJTkpZqxN4lRW0kwVFzFB-iHUpG43322Of5rlNrlhrjbPKFE4epJrss4YHCQBKxVYBrszoQdgiPeSTndLJdyCF_ZKf9lqXQ8W7M_MmFcNFK9kNo-IdRyraSdVmBZaslTHjyOyOSHq7TD_Vgjo6CbVe5S4XiLbJwreILubymJGzcLiSr2E9");
+            headers.set(name, token);
             HttpEntity entity = new HttpEntity(headers);
 
             primary= restTemplate.exchange(urlOne, HttpMethod.GET, entity, Object.class);
             secondary = restTemplate.exchange(urlTwo, HttpMethod.GET, entity, Object.class);
 
-            primaryTest = new JSONObject(primary.getBody());
-            secondaryTest = new JSONObject(secondary.getBody());
+            primaryTest = new JSONObject(primary);
+            secondaryTest = new JSONObject(secondary);/**
+            primaryTest = primaryTest.getJSONObject("body");
+            JSONArray items = primaryTest.getJSONArray("items");
+            primaryTest = (JSONObject) items.get(0);
+            return primaryTest.get("release_date").toString();**/
 
         } catch (IllegalArgumentException e) {
             return "IllegalArgumentException";
         } catch (HttpClientErrorException e) {
-            return "HttpClientErrorException";
+            return "HttpClientErrorException" + e.toString();
         } catch (ClassCastException e) {
             return "response is not in json format";
         } //Test for the type of Object our response is.
@@ -134,8 +138,8 @@ public class MainController {
             if(testEquality(object.getJSONArray(checkPath[checkPath.length-1]), object2.getJSONArray(checkPath[checkPath.length-1]))) {
                 return "Equivalence does hold true";
             }
-            else return "Equivalence does not hold true";
-        } /**
+            else return "Equivalence does not hold true for \n" + object.getJSONArray(checkPath[checkPath.length-1]).toString() + " \n\n" + object2.getJSONArray(checkPath[checkPath.length-1]).toString();
+        }/**
         else if (primaryTest.getClass() == JSONArray.class && secondaryTest.getClass() == JSONArray.class) {
             JSONArray array = (JSONArray) primaryTest; //Test for JSONArray
             JSONArray array2 = (JSONArray) secondaryTest;
@@ -152,7 +156,7 @@ public class MainController {
             }
             else return "Equivalence does not hold true";
         }**/
-        else if (primaryTest.getClass() != secondaryTest.getClass()) return "responses not in same format";
+        if (primaryTest.getClass() != secondaryTest.getClass()) return "responses not in same format";
         else return primaryTest.getClass().toString();
     }
 
