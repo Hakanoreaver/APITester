@@ -42,7 +42,7 @@ public class MainController {
             set( "Authorization", authHeader );
         }};
     }
-    /** This is the equality test
+    /** This is the equality test   
      * @param urlBase
      * @param urlArgs
      * @param argValues
@@ -323,7 +323,7 @@ public class MainController {
         JSONObject firstResponse = getReturn(name, token, urlBase); //Get the primary response
         ArrayList<JSONObject> secondaryResponses = new ArrayList<>();
         for (int i = 1; i < values.length; i++) { //Get the secondary responses
-            urlBase.replace(values[i-1], values[i]);
+            urlBase.replaceAll(values[i-1], values[i]);
             secondaryResponses.add(getReturn(name, token, urlBase));
         }
         ArrayList<JSONArray> array = new ArrayList<>();
@@ -335,6 +335,7 @@ public class MainController {
         for(int i = 0; i < secondaryResponses.size(); i++) {
             JSONObject object = secondaryResponses.get(i);
             for (int x = 0; x < checkPath.length - 1; x++) { //Find the checkpath
+                System.out.println(secondaryResponses.get(i).toString());
                 object = object.getJSONObject(checkPath[i]);
             }
             array.add(object.getJSONArray(checkPath[checkPath.length-1]));
