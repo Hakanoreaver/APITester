@@ -9,15 +9,45 @@
 
 <body>
 <h1>Metamorphic Testing Tool for REST APIs</h1>
-<h2>API Access Token: <input id="access-token" type="text"></h2>
+<h2>Pre-populate API info:
+	<select id="api-info" name="apiInfo">
+		<option value="spotify">Spotify</option>
+	</select> 
+	<button onclick="populateButton()">Auto-populate Fields</button>
+
+<h2>API Access Token: <input id="access-token" type="text" placeholder="Access Token" style="width:40%"></h2>
+<h2> Request Headers: 
+<input id="header-name" type="text" placeholder="Header Name" style="width:30%">
+<input id="header-value" type="text" placeholder="Header Value" style="width:30%">
+<br>
+<hr>
 	<button class="accordion">Equality Test</button>
 	<div class="panel">
+			<span style="font-size:12px;">Number of Arguments:</span>
+			<select id="argumentNumber" name="argumentNumber" onchange="changeBoxes()">
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+					<option value="4">4</option>
+			</select>
 		<br>
 		<input type="text" id="url" placeholder="url base">
+		<br>
+		
 		<input type="text" id="firstArg" placeholder="arg 1">
-		<input type="text" id="secondArg" placeholder="arg 2">
 		<input type="text" id="firstValue" placeholder="val 1">
+		<div id="secondArgumentsDiv" style="display:none;">
+		<input type="text" id="secondArg" placeholder="arg 2">
 		<input type="text" id="secondValue" placeholder="val 2">
+		</div>
+		<div id="thirdArgumentsDiv" style="display:none;">
+		<input type="text" id="thirdArg" placeholder="arg 3">
+		<input type="text" id="thirdValue" placeholder="val 3">
+		</div>
+		<div id="fourthArgumentsDiv" style="display:none;">
+		<input type="text" id="fourthArg" placeholder="arg 4">
+		<input type="text" id="fourthValue" placeholder="val 4">
+		</div>
 		<button onclick="sendEqualityTest()">Send Test</button>
 		<br><br>
 
@@ -62,10 +92,23 @@
 		<button onclick="sendCompleteTest()">Send Test</button>
 		<br><br>
 	</div>
+
+	<button class="accordion">Difference Test</button>
+	<div class="panel">
+		<br>
+		<input type="text" id="diffrenceFirstURL" placeholder="url 1">
+		<input type="text" id="differenceSecondURL" placeholder="url 2">
+		<input type="text" id="differenceURLPath" placeholder="path">
+		<button onclick="sendDifferenceTest()">Send Test</button>
+		<br><br>
+	</div>
+	<textarea id="results" rows="40" cols="50" style="width: 60%;" ></textarea>
 	<br>
+
+	<hr>
 	<h2>Spotify Helper Functions</h2>
 <button onclick="spotifyAPIAuth()">Generate Spotify Token</button>
-<button onclick="getTopTracks()">Test Spotify API</button>
+<button onclick="getArtistAlbum()">Test Spotify API</button>
 
 	<!-- for accordions -->
 	<script>

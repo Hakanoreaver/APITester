@@ -1,0 +1,5 @@
+equality-https://api.spotify.com/v1/search?-q,type,limit-l,artist,50
+equivalence-https://api.spotify.com/v1/search?q=l%26type=artist%26limit=20-https://api.spotify.com/v1/search?q=l%26type=artist-body,artists,items
+subset-https://api.spotify.com/v1/search?q=l%26type=artist%26limit=50-50,40,30,20,10,2-body,artists,items
+disjoint-https://api.spotify.com/v1/search?q=kid%26type=artist%26limit=20-https://api.spotify.com/v1/search?q=lana%26type=artist%26limit=20-body,artists,items
+complete-https://api.spotify.com/v1/search?q=l%26type=artist%26limit=50%26offset=0-limit=50%26offset=0,limit=20%26offset=0,limit=20%26offset=20,limit=10%26offset=40-body,artists,items
